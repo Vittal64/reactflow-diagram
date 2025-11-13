@@ -1,5 +1,4 @@
 import {useState , useEffect , useCallback} from 'react';
-import metadata from './metadata.json'
 import ReactFlow, {ReactFlowProvider}from 'reactflow';
 import {Background} from 'reactflow'
 import {applyNodeChanges , applyEdgeChanges}  from 'reactflow';
@@ -7,28 +6,38 @@ import 'reactflow/dist/style.css'
 import Sidebar  from './components/Sidebar';
 import {v4 as uuidv4} from 'uuid'
 import './App.css'
-
-const STORAGE_KEY = 'diagram-state';
+import metadata from './metadata.json'
 
 function App(){
-  const [nodes , setNodes] = useState([])
-  const [edges , setEdges] = useState([])
+
+  const [nodes, setNodes] = useState(() => {
+    const tempNode = localStorage.getItem('Nodes')
+    if (tempNode === null){
+      return metadata.nodes 
+    }
+    else{
+      return JSON.parse(tempNode)
+    }
+  });
+
+  const [edges, setEdges] = useState(() => {
+    const tempEdge = localStorage.getItem('Edges')
+    if (tempEdge === null){
+      return metadata.edges
+    }
+    else{
+      return JSON.parse(tempEdge)
+    }
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const { nodes: n, edges: e } = JSON.parse(saved);
-      setNodes(n);
-      setEdges(e);
-    } else {
-      setNodes(metadata.nodes);
-      setEdges(metadata.edges);
-    }
-  }, []);
+  localStorage.setItem('Nodes', JSON.stringify(nodes))
+}, [nodes])
 
 useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, edges }));
-  }, [nodes, edges]);
+  localStorage.setItem('Edges', JSON.stringify(edges))
+}, [edges])
+
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
@@ -49,6 +58,7 @@ useEffect(() => {
     }
     let newNodeArray = [...nodes, newNode]
     setNodes(newNodeArray)
+    localStorage.setItem('Nodes',JSON.stringify(newNodeArray))
   }
 
   const addEdge = (source , target) => {
@@ -60,27 +70,38 @@ useEffect(() => {
     }
     let newEdgeArray = [...edges , newEdge]
     setEdges(newEdgeArray)
+    localStorage.setItem('Edges', JSON.stringify(newEdgeArray))
   }
 
   const deleteNode = (id) => {
-    setNodes((nodes) => nodes.filter((n) => n.id !== id));
-    setEdges((edges) => edges.filter((e) => e.source !== id && e.target !== id));
-  }
-
-  const updateNodeLabel = (id , newLabel) => {
-    setNodes((nodes) =>
-      nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, label : newLabel } } : n))
-    );
+    let newNodeArray = nodes.filter((node) => node.id !== id)
+    setNodes(newNodeArray)
+    localStorage.setItem('Nodes',JSON.stringify(newNodeArray))
   }
 
   const deleteEdge = (id) => {
-    setEdges((edges) => edges.filter((edge) => (edge.id !== id)))
+    let newEdgeArray = edges.filter((edge) => edge.id !== ('e' + id))
+    setEdges(newEdgeArray)
+    localStorage.setItem('Edges', JSON.stringify(newEdgeArray))
+  }
+
+  const updateNodeLabel = (id , newLabel) => {
+    let updatedNodeArray = nodes.map((node) => {
+      if (node.id === id){
+        return {...node, data : {...node.data , label : newLabel}}
+      }
+      else{
+        return node 
+      }
+    })
+    setNodes(updatedNodeArray)
+    localStorage.setItem('Nodes',JSON.stringify(updatedNodeArray))
   }
 
   return (
+    <ReactFlowProvider>
     <div className='container'>
     <Sidebar addNode = {addNode} addEdge = {addEdge} deleteNode = {deleteNode} updateNodeLabel = {updateNodeLabel} deleteEdge = {deleteEdge}/>
-    <ReactFlowProvider>
       <div style={{height : '100vh', width : '100vw'}}>
       <ReactFlow
        nodes = {nodes} 
@@ -91,8 +112,8 @@ useEffect(() => {
       <Background />
       </ReactFlow>
       </div>
-    </ReactFlowProvider>
     </div>
+  </ReactFlowProvider>
   )
 }
 

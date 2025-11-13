@@ -12,7 +12,7 @@ function App(){
   const [nodes , setNodes] = useState([])
   const [edges , setEdges] = useState([])
 
-  useEffect(async () => {
+  useEffect(() => {
     setNodes(metadata.nodes)
     setEdges(metadata.edges)
   }, []);
@@ -38,7 +38,7 @@ function App(){
     setNodes(newNodeArray)
   }
 
-  const addEdge = async (source , target) => {
+  const addEdge = (source , target) => {
     let newEdge = {
       'id' : 'e' + uuidv4(),
       'source' : source,
@@ -49,18 +49,18 @@ function App(){
     setEdges(newEdgeArray)
   }
 
-  const deleteNode = async (id) => {
+  const deleteNode = (id) => {
     setNodes((nodes) => nodes.filter((n) => n.id !== id));
     setEdges((edges) => edges.filter((e) => e.source !== id && e.target !== id));
   }
 
-  const updateNodeLabel = async (id , newLabel) => {
+  const updateNodeLabel = (id , newLabel) => {
     setNodes((nodes) =>
       nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, label : newLabel } } : n))
     );
   }
 
-  const deleteEdge = async (id) => {
+  const deleteEdge = (id) => {
     setEdges((edges) => edges.filter((edge) => (edge.id !== id)))
   }
 

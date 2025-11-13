@@ -8,14 +8,27 @@ import Sidebar  from './components/Sidebar';
 import {v4 as uuidv4} from 'uuid'
 import './App.css'
 
+const STORAGE_KEY = 'diagram-state';
+
 function App(){
   const [nodes , setNodes] = useState([])
   const [edges , setEdges] = useState([])
 
   useEffect(() => {
-    setNodes(metadata.nodes)
-    setEdges(metadata.edges)
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const { nodes: n, edges: e } = JSON.parse(saved);
+      setNodes(n);
+      setEdges(e);
+    } else {
+      setNodes(metadata.nodes);
+      setEdges(metadata.edges);
+    }
   }, []);
+
+useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, edges }));
+  }, [nodes, edges]);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
